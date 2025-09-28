@@ -1,0 +1,37 @@
+{
+  "name": "sql-query-manager",
+  "version": "1.0.0",
+  "description": "A web application to save, search, and visualize SQL queries.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "set NODE_OPTIONS=--openssl-legacy-provider && react-scripts start",
+    "build": "set NODE_OPTIONS=--openssl-legacy-provider && react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "keywords": [
+    "sql",
+    "queries",
+    "search",
+    "react"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "mongoose": "^8.18.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-scripts": "4.0.3",
+    "react-syntax-highlighter": "^15.6.6"
+  },
+  "homepage": "http://yourhomepage.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/sql-query-manager.git"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
