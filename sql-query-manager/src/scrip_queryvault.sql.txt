@@ -1,0 +1,210 @@
+-- Script para insertar datos de prueba en QueryVault
+-- Ejecutar después de crear las tablas principales
+
+USE queryvaul;
+
+-- Limpiar datos existentes (opcional)
+-- DELETE FROM consulta_etiqueta;
+-- DELETE FROM versiones_consulta;
+-- DELETE FROM consultas;
+-- DELETE FROM etiquetas;
+
+-- Reiniciar contadores AUTO_INCREMENT
+ALTER TABLE consultas AUTO_INCREMENT = 1;
+ALTER TABLE etiquetas AUTO_INCREMENT = 1;
+
+-- =================== INSERTAR ETIQUETAS ===================
+INSERT INTO etiquetas (nombre) VALUES 
+('SELECT'),
+('JOIN'), 
+('UPDATE'),
+('DELETE'),
+('INSERT'),
+('REPORT'),
+('ADMIN'),
+('ANALYTICS'),
+('USERS'),
+('ORDERS'),
+('PRODUCTS'),
+('PERFORMANCE'),
+('SECURITY'),
+('BACKUP'),
+('MIGRATION');
+
+-- =================== INSERTAR CONSULTAS DE PRUEBA ===================
+
+-- Consulta 1: Usuarios activos
+INSERT INTO consultas (titulo, descripcion, sql_codigo, autor) VALUES 
+('Usuarios Activos', 
+'Obtiene todos los usuarios que han estado activos en los últimos 30 días', 
+'SELECT u.id, u.nombre, u.email, u.last_login
+FROM users u 
+WHERE u.active = 1 
+  AND u.last_login >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+ORDER BY u.last_login DESC;', 
+'Juan Pérez');
+
+-- Consulta 2: Reporte de ventas mensuales
+INSERT INTO consultas (titulo, descripcion, sql_codigo, autor) VALUES 
+('Reporte Ventas Mensual',
+'Reporte de ventas agrupado por mes del año actual',
+'SELECT 
+  MONTH(o.fecha_orden) as mes,
+  MONTHNAME(o.fecha_orden) as nombre_mes,
+  COUNT(*) as total_ordenes,
+  SUM(o.total) as total_ventas,
+  AVG(o.total) as promedio_venta
+FROM orders o 
+WHERE YEAR(o.fecha_orden) = YEAR(NOW())
+GROUP BY MONTH(o.fecha_orden), MONTHNAME(o.fecha_orden)
+ORDER BY mes;',
+'Ana García');
+
+-- Consulta 3: Productos más vendidos
+INSERT INTO consultas (titulo, descripcion, sql_codigo, autor) VALUES 
+('Top 10 Productos Vendidos',
+'Los 10 productos más vendidos en el último trimestre',
+'SELECT 
+  p.nombre,
+  p.categoria,
+  SUM(od.cantidad) as total_vendido,
+  SUM(od.cantidad * od.precio) as ingresos_totales
+FROM products p
+INNER JOIN order_details od ON p.id = od.product_id
+INNER JOIN orders o ON od.order_id = o.id
+WHERE o.fecha_orden >= DATE_SUB(NOW(), INTERVAL 3 MONTH)
+GROUP BY p.id, p.nombre, p.categoria
+ORDER BY total_vendido DESC
+LIMIT 10;',
+'Carlos López');
+
+-- Consulta 4: Análisis de rendimiento
+INSERT INTO consultas (titulo, descripcion, sql_codigo, autor) VALUES 
+('Análisis Performance DB',
+'Consulta para analizar el rendimiento de las tablas principales',
+'SELECT 
+  TABLE_NAME as tabla,
+  TABLE_ROWS as filas,
+  ROUND(((DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024), 2) as tamaño_mb,
+  ENGINE as motor
+FROM information_schema.TABLES
+WHERE TABLE_SCHEMA = DATABASE()
+ORDER BY (DATA_LENGTH + INDEX_LENGTH) DESC;',
+'Admin');
+
+-- Consulta 5: Usuarios sin actividad
+INSERT INTO consultas (titulo, descripcion, sql_codigo, autor) VALUES 
+('Usuarios Inactivos',
+'Identifica usuarios que no han tenido actividad en más de 90 días',
+'SELECT 
+  u.id,
+  u.nombre,
+  u.email,
+  u.fecha_registro,
+  u.last_login,
+  DATEDIFF(NOW(), u.last_login) as dias_inactivo
+FROM users u 
+WHERE u.last_login < DATE_SUB(NOW(), INTERVAL 90 DAY)
+  OR u.last_login IS NULL
+ORDER BY u.last_login ASC;',
+'María Rodríguez');
+
+-- Consulta 6: Backup de configuración
+INSERT INTO consultas (titulo, descripcion, sql_codigo, autor) VALUES 
+('Backup Tabla Usuarios',
+'Script para hacer backup completo de la tabla usuarios',
+'CREATE TABLE users_backup_$(date) AS
+SELECT 
+  id, nombre, email, fecha_registro, 
+  last_login, active, created_at, updated_at
+FROM users;
+
+-- Verificar backup
+SELECT COUNT(*) as total_respaldado FROM users_backup_$(date);',
+'DBA Team');
+
+-- Consulta 7: Consulta compleja con múltiples JOINs
+INSERT INTO consultas (titulo, descripcion, sql_codigo, autor) VALUES 
+('Reporte Completo Ventas',
+'Reporte detallado que combina usuarios, órdenes y productos',
+'SELECT 
+  u.nombre as cliente,
+  u.email,
+  o.id as orden_id,
+  o.fecha_orden,
+  p.nombre as producto,
+  od.cantidad,
+  od.precio,
+  (od.cantidad * od.precio) as subtotal
+FROM users u
+INNER JOIN orders o ON u.id = o.user_id
+INNER JOIN order_details od ON o.id = od.order_id  
+INNER JOIN products p ON od.product_id = p.id
+WHERE o.fecha_orden >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
+ORDER BY o.fecha_orden DESC, u.nombre;',
+'Equipo Analytics');
+
+-- =================== RELACIONAR CONSULTAS CON ETIQUETAS ===================
+
+-- Usuarios Activos (ID 1) -> SELECT, USERS
+INSERT INTO consulta_etiqueta (consulta_id, etiqueta_id) VALUES 
+(1, 1), (1, 9);
+
+-- Reporte Ventas Mensual (ID 2) -> SELECT, REPORT, ANALYTICS
+INSERT INTO consulta_etiqueta (consulta_id, etiqueta_id) VALUES 
+(2, 1), (2, 6), (2, 8);
+
+-- Top 10 Productos (ID 3) -> SELECT, JOIN, PRODUCTS, REPORT
+INSERT INTO consulta_etiqueta (consulta_id, etiqueta_id) VALUES 
+(3, 1), (3, 2), (3, 11), (3, 6);
+
+-- Análisis Performance (ID 4) -> SELECT, ADMIN, PERFORMANCE
+INSERT INTO consulta_etiqueta (consulta_id, etiqueta_id) VALUES 
+(4, 1), (4, 7), (4, 12);
+
+-- Usuarios Inactivos (ID 5) -> SELECT, USERS, ANALYTICS
+INSERT INTO consulta_etiqueta (consulta_id, etiqueta_id) VALUES 
+(5, 1), (5, 9), (5, 8);
+
+-- Backup Usuarios (ID 6) -> ADMIN, BACKUP
+INSERT INTO consulta_etiqueta (consulta_id, etiqueta_id) VALUES 
+(6, 7), (6, 14);
+
+-- Reporte Completo (ID 7) -> SELECT, JOIN, REPORT, ANALYTICS
+INSERT INTO consulta_etiqueta (consulta_id, etiqueta_id) VALUES 
+(7, 1), (7, 2), (7, 6), (7, 8);
+
+-- =================== AGREGAR VERSIONES DE EJEMPLO ===================
+
+-- Versión anterior de la consulta de usuarios activos
+INSERT INTO versiones_consulta (consulta_id, sql_codigo) VALUES 
+(1, 'SELECT * FROM users WHERE active = 1;');
+
+-- Versión anterior del reporte de ventas
+INSERT INTO versiones_consulta (consulta_id, sql_codigo) VALUES 
+(2, 'SELECT COUNT(*) FROM orders WHERE MONTH(fecha_orden) = MONTH(NOW());');
+
+-- =================== VERIFICACIONES ===================
+
+-- Verificar que todo se insertó correctamente
+SELECT 'Total Etiquetas' as tipo, COUNT(*) as cantidad FROM etiquetas
+UNION ALL
+SELECT 'Total Consultas' as tipo, COUNT(*) as cantidad FROM consultas  
+UNION ALL
+SELECT 'Total Relaciones' as tipo, COUNT(*) as cantidad FROM consulta_etiqueta
+UNION ALL
+SELECT 'Total Versiones' as tipo, COUNT(*) as cantidad FROM versiones_consulta;
+
+-- Mostrar consultas con sus etiquetas
+SELECT 
+  c.id,
+  c.titulo,
+  c.autor,
+  GROUP_CONCAT(e.nombre) as etiquetas
+FROM consultas c
+LEFT JOIN consulta_etiqueta ce ON c.id = ce.consulta_id
+LEFT JOIN etiquetas e ON ce.etiqueta_id = e.id
+GROUP BY c.id, c.titulo, c.autor
+ORDER BY c.id;
+
+COMMIT;
